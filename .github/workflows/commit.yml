@@ -1,0 +1,30 @@
+name: commit
+on: push
+jobs:
+  build_and_test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: arduino/setup-protoc@v2
+        with:
+          version: "23.1"
+      - name: Lint
+        run: |
+          cd rust
+          cargo clippy -r --verbose -- -D warnings # elevates warnings to errors
+      - name: Build
+        run: |
+          cd rust
+          cargo build --release --verbose --features "strict"
+      - name: Test
+        run: |
+          cd rust
+          
+          # we need a basic git configuration for the tests to pass
+          git config --global user.email operations@xetdata.com
+          git config --global user.name "XetData Automation"
+          
+          cargo test
