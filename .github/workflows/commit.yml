@@ -17,10 +17,16 @@ jobs:
         run: |
           cd rust
           cargo clippy -r --verbose -- -D warnings # elevates warnings to errors
-      - name: Build
+      - name: Build Windows
+        if: runner.os == 'Windows'
         run: |
           cd rust
-          cargo build --release --verbose
+          cargo build --verbose
+      - name: Build Non-Windows
+        if: runner.os != 'Windows'
+        run: |
+          cd rust
+          cargo build --release --verbose --features "strict"
       - name: Test
         run: |
           cd rust
