@@ -4,7 +4,7 @@ jobs:
   build_and_test:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -20,7 +20,7 @@ jobs:
       - name: Build
         run: |
           cd rust
-          cargo build --release --verbose --features "strict"
+          cargo build --release --verbose
       - name: Test
         run: |
           cd rust
