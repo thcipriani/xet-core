@@ -13,6 +13,7 @@ jobs:
           version: "23.1"
           repo-token: ${{ secrets.DEV_GITHUB_TOKEN }}
       - name: Lint
+        if: runner.os == 'Linux'
         run: |
           cd rust
           cargo clippy -r --verbose -- -D warnings # elevates warnings to errors
