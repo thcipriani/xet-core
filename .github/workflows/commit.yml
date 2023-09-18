@@ -24,8 +24,7 @@ jobs:
           cargo build --release --verbose --features "strict"
       - name: Test
         run: |
-          echo $RUNNER_OS
-          if [ $RUNNER_OS = 'MacOS' ]; then
+          if [ $RUNNER_OS = 'macOS' ]; then
             brew install md5sha1sum
           fi
           cd rust
