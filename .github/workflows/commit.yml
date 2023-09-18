@@ -18,7 +18,6 @@ jobs:
         run: |
           cd rust
           cargo clippy -r --verbose -- -D warnings # elevates warnings to errors
-
       - name: Build
         run: |
           cd rust
@@ -27,7 +26,7 @@ jobs:
         run: |
           echo $RUNNER_OS
           if [ $RUNNER_OS = 'MacOS' ]; then
-            brew install md5sum
+            brew install md5sha1sum
           fi
           cd rust
           
