@@ -1,3 +1,4 @@
+#[cfg(unix)]
 use is_executable::IsExecutable;
 use mdb_shard::error::MDBShardError;
 use mdb_shard::shard_version::ShardVersion;
@@ -1032,12 +1033,6 @@ impl GitRepo {
         Ok(())
     }
 
-    #[cfg(windows)]
-    fn set_execute_permission(_path: &Path) -> Result<()> {
-        // do nothing because Windows FS doesn't have a concept of executable
-        Ok(())
-    }
-
     fn write_hook(&self, subpath: &str, script: &str) -> Result<bool> {
         let path = self.git_dir.join(subpath);
 
@@ -1075,6 +1070,8 @@ impl GitRepo {
         }
 
         // Make sure the executable status is set.
+        // do nothing on Windows because Windows FS doesn't have a concept of executable
+        #[cfg(unix)]
         if !path.is_executable() {
             Self::set_execute_permission(&path)?;
             changed = true;
