@@ -1,7 +1,8 @@
 use cas::output_bytes;
 use crossterm::{cursor, QueueableCommand};
+use std::f64::INFINITY;
 use std::io::{stderr, Write};
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
@@ -15,7 +16,6 @@ struct DPRPrintInfo {
 
 #[derive(Debug)]
 pub struct DataProgressReporter {
-    is_active: AtomicBool,
     disable: bool,
     total_count: AtomicUsize,
     total_bytes: AtomicUsize,
@@ -23,6 +23,7 @@ pub struct DataProgressReporter {
     current_bytes: AtomicUsize,
     message: String,
     time_at_start: Instant,
+    delay_millis: AtomicU64,
     last_print_time: AtomicU64, // In miliseconds since time_at_start
 
     // Also used as a lock around the printing.
@@ -34,9 +35,11 @@ impl DataProgressReporter {
         message: &str,
         total_unit_count: Option<usize>,
         total_byte_count: Option<usize>,
+        delay_seconds: Option<f64>,
     ) -> Arc<Self> {
+        let delay_seconds = delay_seconds.unwrap_or(0.);
+
         Arc::new(Self {
-            is_active: AtomicBool::new(true),
             disable: atty::isnt(atty::Stream::Stderr),
             total_count: AtomicUsize::new(total_unit_count.unwrap_or(0)),
             total_bytes: AtomicUsize::new(total_byte_count.unwrap_or(0)),
@@ -46,6 +49,11 @@ impl DataProgressReporter {
             time_at_start: Instant::now(),
             last_print_time: AtomicU64::new(0),
             print_info: Mutex::new(<_>::default()),
+            delay_millis: AtomicU64::new(if delay_seconds.is_finite() {
+                (delay_seconds * 1000.).floor().max(0.0) as u64
+            } else {
+                u64::MAX
+            }),
         })
     }
 
@@ -54,13 +62,13 @@ impl DataProgressReporter {
         total_unit_count: Option<usize>,
         total_byte_count: Option<usize>,
     ) -> Arc<Self> {
-        let s = Self::new(message, total_unit_count, total_byte_count);
-        s.is_active.store(false, Ordering::Relaxed);
+        let s = Self::new(message, total_unit_count, total_byte_count, Some(INFINITY));
         s
     }
 
     pub fn set_active(&self, active_flag: bool) {
-        self.is_active.store(active_flag, Ordering::Relaxed);
+        self.delay_millis
+            .store(if active_flag { 0 } else { u64::MAX }, Ordering::Relaxed);
     }
 
     /// Adds progress into the register, printing the result.
@@ -122,6 +130,8 @@ impl DataProgressReporter {
         if let Some(b) = byte_delta {
             self.total_bytes.fetch_add(b, Ordering::Relaxed);
         }
+
+        let _ = self.print(false);
     }
 
     pub fn set_progress(&self, unit_amount: Option<usize>, bytes: Option<usize>) {
@@ -143,13 +153,17 @@ impl DataProgressReporter {
 
     /// Does the actual printing
     fn print(&self, is_final: bool) -> std::result::Result<(), std::io::Error> {
-        if self.disable || !self.is_active.load(Ordering::Relaxed) {
+        if self.disable {
             return Ok(());
         }
 
         let elapsed_time = Instant::now().duration_since(self.time_at_start);
 
         let elapsed_millis = elapsed_time.as_millis().min(u64::MAX as u128) as u64;
+
+        if elapsed_millis < self.delay_millis.load(Ordering::Relaxed) {
+            return Ok(());
+        }
 
         let last_print_time = self.last_print_time.load(Ordering::Relaxed);
 

@@ -116,8 +116,12 @@ impl StagingUpload for StagingClient {
         );
 
         let pb = if self.progressbar && !entries.is_empty() {
-            let pb =
-                DataProgressReporter::new("Xet: Uploading data blocks", Some(entries.len()), None);
+            let pb = DataProgressReporter::new(
+                "Xet: Uploading data blocks",
+                Some(entries.len()),
+                None,
+                Some(1.0),
+            );
 
             pb.register_progress(Some(0), Some(0)); // draw the bar immediately
 

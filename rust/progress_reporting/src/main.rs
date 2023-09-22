@@ -3,7 +3,12 @@ use progress_reporting::DataProgressReporter;
 use std::thread::sleep;
 
 fn main() {
-    let pb = DataProgressReporter::new("Testing progress bar (no totals, no bytes)", None, None);
+    let pb = DataProgressReporter::new(
+        "Testing progress bar (no totals, no bytes)",
+        None,
+        None,
+        None,
+    );
 
     pb.register_progress(Some(1), None);
     sleep(time::Duration::from_millis(500));
@@ -17,6 +22,7 @@ fn main() {
         "Testing progress bar (total count, no bytes)",
         Some(5),
         None,
+        None,
     );
     pb.register_progress(Some(1), None);
     sleep(time::Duration::from_millis(500));
@@ -26,7 +32,12 @@ fn main() {
     sleep(time::Duration::from_millis(500));
     pb.finalize();
 
-    let pb = DataProgressReporter::new("Testing progress bar (no totals, only bytes)", None, None);
+    let pb = DataProgressReporter::new(
+        "Testing progress bar (no totals, only bytes)",
+        None,
+        None,
+        None,
+    );
 
     pb.register_progress(None, Some(5000));
     sleep(time::Duration::from_millis(500));
@@ -40,6 +51,7 @@ fn main() {
         "Testing progress bar (only bytes + total)",
         None,
         Some(20000),
+        None,
     );
 
     pb.register_progress(None, Some(5000));
@@ -54,6 +66,7 @@ fn main() {
         "Testing progress bar (no totals, both count + bytes)",
         None,
         None,
+        None,
     );
 
     pb.register_progress(Some(5), Some(5000));
@@ -64,7 +77,7 @@ fn main() {
     sleep(time::Duration::from_millis(500));
     pb.finalize();
 
-    let pb = DataProgressReporter::new("Testing progress bar (Total count)", Some(30), None);
+    let pb = DataProgressReporter::new("Testing progress bar (Total count)", Some(30), None, None);
 
     pb.register_progress(Some(5), Some(5000));
     sleep(time::Duration::from_millis(500));
@@ -78,6 +91,7 @@ fn main() {
         "Testing progress bar (Total count + total bytes)",
         Some(30),
         Some(20000),
+        None,
     );
 
     pb.register_progress(Some(5), Some(5000));
