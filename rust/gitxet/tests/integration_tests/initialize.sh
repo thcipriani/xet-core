@@ -60,7 +60,7 @@ useremail=$(git config --get user.email || echo "")
 # TODO: Uncomment this:
 if [[ -z $XET_TESTING_REMOTE ]] ; then  
   if [[ -z $XET_CAS_SERVER ]] ; then 
-    export XET_CAS_SERVER="local://$PWD/cas"
+    export XET_CAS_SERVER="local://$XET_TMPDIR/cas"
     mkdir -p "$PWD/cas"
   fi
 fi

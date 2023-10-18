@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use normpath::PathExt;
 use std::{io::Write, path::Path, process::Command};
 use tempfile::TempDir;
 use tracing::info;
@@ -32,7 +33,7 @@ impl IntegrationTest {
     fn run(&self) -> anyhow::Result<()> {
         // Create a temporary directory
         let tmp_repo_dest = TempDir::new().unwrap();
-        let tmp_path_path = tmp_repo_dest.path().to_path_buf();
+        let tmp_path_path = tmp_repo_dest.path().to_path_buf().normalize()?;
 
         std::fs::write(tmp_path_path.join("test_script.sh"), &self.test_script).unwrap();
         std::fs::write(
@@ -70,6 +71,7 @@ impl IntegrationTest {
                 &std::env::var("PATH").unwrap()
             ),
         );
+        cmd.env("XET_TMPDIR", tmp_path_path.clone());
 
         // Now, to prevent ~/.gitconfig to be read, we need to reset the home directory; otherwise
         // these tests will not be run in an isolated environment.
